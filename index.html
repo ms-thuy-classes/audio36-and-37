@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learn with Ms. Thúy</title>
+    <style>
+        :root {
+            --primary: #feca57;
+            --accent: #d35400;
+            --bg: #fffcf0;
+            --correct: #2ecc71;
+            --wrong: #e74c3c;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #fdf2e9;
+            color: #333;
+        }
+
+        /* --- NAVIGATION & HAMBURGER --- */
+        nav {
+            background: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .menu-btn {
+            font-size: 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: white;
+            margin-right: 15px;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            position: fixed;
+            left: -280px;
+            top: 0;
+            width: 280px;
+            height: 100%;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+            transition: 0.3s;
+            z-index: 1001;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .sidebar.active { left: 0; }
+
+        .sidebar h3 { color: var(--accent); border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
+
+        .lesson-item {
+            padding: 12px;
+            margin: 10px 0;
+            background: #f9f9f9;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .lesson-item:hover { background: var(--primary); color: white; }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .overlay.active { display: block; }
+
+        /* --- LAYOUT --- */
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 15px;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 850px) {
+            .container { grid-template-columns: 1fr; }
+            .media-box { position: static !important; }
+        }
+
+        .media-box {
+            background: white;
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            text-align: center;
+            height: fit-content;
+            position: sticky;
+            top: 70px;
+        }
+
+        .media-box img {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 15px;
+            margin-bottom: 15px;
+        }
+
+        audio { width: 100%; }
+
+        .exercise-box {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .transcript {
+            line-height: 2.2;
+            font-size: 1.1em;
+            text-align: justify;
+        }
+
+        .role { color: var(--accent); font-weight: bold; display: block; margin-top: 15px; }
+
+        input {
+            border: none;
+            border-bottom: 2px solid var(--primary);
+            width: 110px;
+            text-align: center;
+            font-size: 0.95em;
+            background: #fff9e6;
+            margin: 0 2px;
+            padding: 2px 0;
+        }
+
+        input:focus { outline: none; background: var(--primary); color: white; }
+
+        .correct { color: var(--correct) !important; border-bottom: 2px solid var(--correct) !important; font-weight: bold; background: transparent !important; }
+        .wrong { color: var(--wrong) !important; border-bottom: 2px solid var(--wrong) !important; background: transparent !important; }
+        .feedback { font-size: 0.85em; color: var(--wrong); font-weight: bold; margin-left: 3px; }
+
+        .check-btn {
+            display: block; width: 100%; max-width: 300px;
+            margin: 30px auto; padding: 15px;
+            background: var(--accent); color: white;
+            border: none; border-radius: 30px;
+            font-size: 1.1em; font-weight: bold; cursor: pointer;
+            transition: 0.3s;
+        }
+        .check-btn:hover { background: #b34700; transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+
+<nav>
+    <button class="menu-btn" onclick="toggleMenu()">☰</button>
+    <h2 style="margin:0; font-size: 1.2em;">Learn with Ms. Thúy</h2>
+</nav>
+
+<div class="overlay" onclick="toggleMenu()"></div>
+
+<aside class="sidebar" id="sidebar">
+    <h3>Bài học</h3>
+    <div id="lesson-list"></div>
+    <button onclick="toggleMenu()" style="margin-top:20px; width:100%; padding:10px; cursor:pointer;">Đóng Menu</button>
+</aside>
+
+<div class="container">
+    <div class="media-box" id="media-container" style="display: none;">
+        <img id="l-img" src="" alt="Minh họa">
+        <audio id="l-audio" controls controlsList="nodownload"></audio>
+    </div>
+
+    <main class="exercise-box" id="exercise-container" style="display: none;">
+        <h2 id="l-title" style="color: var(--accent); text-align: center;"></h2>
+        <div class="transcript" id="l-content"></div>
+        <button class="check-btn" onclick="checkScore()">Kiểm tra kết quả</button>
+        <div id="result" style="text-align:center; font-weight:bold; font-size:1.5em; margin-top:15px; color: var(--accent);"></div>
+    </main>
+
+    <div id="welcome" style="grid-column: 1/-1; text-align: center; padding: 100px 20px;">
+        <h3>🌸 Chào mừng bạn học viên! 🌸</h3>
+        <p>Bấm vào biểu tượng <strong>☰</strong> góc trên bên trái để chọn bài tập nghe nhé.</p>
+    </div>
+</div>
+
+<script>
+    const lessons = [
+        {
+            id: 1,
+            title: "Unit 36: Chopsticks",
+            image: "https://upload.wikimedia.org/wikipedia/commons/4/49/Chopsticks_on_a_dish.jpg",
+            audio: "https://github.com/ms-thuy-classes/audio/raw/refs/heads/main/Mindset_L1_36.mp3",
+            data: [
+                "I suppose one thing that everybody knows about Japanese, Chinese and Korean cooking is that they all use ", { t: "chopsticks", q: true }, 
+                " rather than ", { t: "knives", q: true }, " and forks like people in the West. The chopsticks that people use in the different countries are quite different though. In China the chopsticks tend to be made of ", 
+                { t: "wood", q: true }, " and are ", { t: "round", q: true }, " at the end, whereas in Korea they're made of ", 
+                { t: "stainless steel", q: true }, " and are ", { t: "rough", q: true }, " at the end. This is because in the past the ", 
+                { t: "emperor", q: true }, " would use silver chopsticks, as they changed colour if there was any ", 
+                { t: "poison", q: true }, " in the dish. They can be quite tricky to use, but in Korea people use a ", 
+                { t: "spoon", q: true }, " to eat their rice. In Japan they use a variety of things to make chopsticks. Wood and ", 
+                { t: "plastic", q: true }, " are the most popular now, but you can find bone, metal and even ", 
+                { t: "ivory", q: true }, " ones. If we look at the food of the different countries, it's very difficult to talk about China in general terms because it has many different ", 
+                { t: "cuisines", q: true }, ". So it might be better if we look at Korean and Japanese food a little more. It's well known that Koreans tend to like ", 
+                { t: "spicier", q: true }, " food and red peppers can be found in a wide number of dishes. I suppose that everybody thinks of ", 
+                { t: "sushi", q: true }, " when they think of Japanese food, but you can also find a lot of ", 
+                { t: "influences", q: true }, " from all over Asia and even Europe, for example ", { t: "tempura", q: true }, 
+                ", which came to Japan from Portugal. Those aren't present in Chinese and Korean food. <br><br>",
+                { t: "Traditionally", q: true }, ", in both Japan and in Korea ", { t: "meat", q: true }, 
+                " plays less of an important role than in Europe, perhaps because it's so expensive due to the ", 
+                { t: "lack", q: true }, " of space for keeping animals. That said, both the Japanese and Koreans enjoy meat. ", 
+                { t: "Barbecues", q: true }, " of all types are popular in Korea and beef forms the basis of many special meals in both of the countries. Now moving back to Chinese cuisine ..."
+            ]
+        },
+        {
+            id: 2,
+            title: "Unit 37: Beijing Food",
+            image: "https://vcdn1-dulich.vnecdn.net/2018/08/15/pekingduckdeliciousness27362-1-7291-7643-1534331341.jpg?w=1200&h=0&q=100&dpr=1&fit=crop&s=PPyVcoEMZroRTv3LWuxGMw",
+            audio: "https://github.com/ms-thuy-classes/audio/raw/refs/heads/main/Mindset_L1_37.mp3",
+            data: [
+                "<span class='role'>Interviewer:</span> Today in the studio I am pleased to have with me the famous chef, Graham Shepherd. Graham has just come back from ", { t: "Beijing", q: true }, " in China, where he was making a TV programme on the food that you can try in this historic city. So, Graham, what can you tell us about your trip? Was it how you expected it to be?",
+                "<span class='role'>Graham:</span> It was quite surprising really. I suppose that most people think of Beijing ", { t: "duck", q: true }, " when they think of Beijing and I did try some of this tasty ", { t: "traditional", q: true }, " dish, but with so many people from all over the country living in Beijing there really are a lot of different foods from all regions of the country. One dish that I really enjoyed and I didn't expect to find was ", { t: "kebabs", q: true }, ". These tasty snacks are originally from North West China, but they're very popular ", { t: "street food", q: true }, " in Beijing. They're especially popular as a tasty snack at lunchtime for school pupils. They have less meat and more ", { t: "vegetables", q: true }, " than we are used to, so they're a bit ", { t: "healthier", q: true }, ".",
+                "<span class='role'>Interviewer:</span> I'm sure that most people have tried kebabs, but did you try anything that might be ", { t: "unusual", q: true }, " for our listeners?",
+                "<span class='role'>Graham:</span> Oh, yes. One of the things that I had was ", { t: "jellyfish", q: true }, ". It added a nice ", { t: "texture", q: true }, " to the dish, but I thought it didn't taste of much. One dish that did have a strong taste was ", { t: "hotpot", q: true }, ". The dish I had was made in the ", { t: "Sichuan", q: true }, " style, so it was very ", { t: "spicy", q: true }, ". What I found interesting was that the hotpot was put on a hotplate in the centre of the table, and we were given a dish of ", { t: "raw", q: true }, " food and we chose what we wanted and put it into the pot ourselves, and got it out when it was ready. It was great fun and very sociable. And very tasty!",
+                "<span class='role'>Interviewer:</span> I'm sure that you tried some of the dishes that we all know and love too. Can you tell us something interesting about them?",
+                "<span class='role'>Graham:</span> Of course, everybody knows about noodles and ", { t: "dumplings", q: true }, ", but I doubt many people know how many different types there are! One of the ", { t: "highlights", q: true }, " for me was learning how to make fresh noodles with a chef from Northern China. The ", { t: "recipe", q: true }, " of egg, salt and wheat flour is quite simple, but to make the noodles by hand you need to be quite a ", { t: "skilful", q: true }, " chef. Something which is much simpler to make are dumplings. The basic ingredients are flour and water, but the beauty of this dish is that it's very ", { t: "flexible", q: true }, ". You can fill them with whatever you like. I especially enjoyed one with raw prawns, but all sorts of meat and vegetables can be put in them.",
+                "<span class='role'>Interviewer:</span> Thanks Graham, that's really interesting, but ", { t: "unfortunately", q: true }, " we've run out of time. If you'd like to know more about Graham's adventures, the series will be starting on Thursday at 7 o'clock on Channel 9."
+            ]
+        }
+    ];
+
+    function toggleMenu() {
+        document.getElementById('sidebar').classList.toggle('active');
+        document.querySelector('.overlay').classList.toggle('active');
+    }
+
+    function initLessons() {
+        const list = document.getElementById('lesson-list');
+        lessons.forEach(l => {
+            const item = document.createElement('div');
+            item.className = 'lesson-item';
+            item.innerText = l.title;
+            item.onclick = () => loadLesson(l.id);
+            list.appendChild(item);
+        });
+    }
+
+    function loadLesson(id) {
+        toggleMenu();
+        document.getElementById('welcome').style.display = 'none';
+        document.getElementById('media-container').style.display = 'block';
+        document.getElementById('exercise-container').style.display = 'block';
+        
+        const l = lessons.find(item => item.id === id);
+        document.getElementById('l-title').innerText = l.title;
+        document.getElementById('l-img').src = l.image;
+        document.getElementById('l-audio').src = l.audio;
+        
+        const content = document.getElementById('l-content');
+        content.innerHTML = '';
+        document.getElementById('result').innerText = '';
+
+        l.data.forEach(part => {
+            if (typeof part === 'string') {
+                content.innerHTML += part;
+            } else {
+                content.innerHTML += `<input type="text" data-ans="${part.t}" autocomplete="off">`;
+            }
+        });
+    }
+
+    function checkScore() {
+        let score = 0;
+        const inputs = document.querySelectorAll('input');
+        if (inputs.length === 0) return;
+
+        inputs.forEach(input => {
+            const user = input.value.trim().toLowerCase();
+            const real = input.dataset.ans.toLowerCase();
+            
+            if(input.nextElementSibling?.className === 'feedback') input.nextElementSibling.remove();
+
+            if (user === real) {
+                input.className = 'correct';
+                score++;
+            } else {
+                input.className = 'wrong';
+                const hint = document.createElement('span');
+                hint.className = 'feedback';
+                hint.innerText = ` (${input.dataset.ans})`;
+                input.parentNode.insertBefore(hint, input.nextSibling);
+            }
+        });
+        document.getElementById('result').innerText = `🏆 Kết quả: ${score}/${inputs.length}`;
+    }
+
+    initLessons();
+</script>
+
+</body>
+</html>
